@@ -111,5 +111,5 @@ function updateTilSpawn(){
 		used to update the spawn variables in a pinch
 	*/
 	recalculateSpawnVars();
-	// Math.min(tilspawn, spawnDelay * enemies.length);
+	// Math.min(tilspawn, spawnDelay * enemies.length); //don't know why I put this here
 }

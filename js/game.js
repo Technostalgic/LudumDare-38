@@ -5,7 +5,13 @@
 ///	twitter @technostalgicGM
 ///
 
-// prevents arrow key / space scrolling
+/* game.js
+	the main entry point for the game, interlaces all data structures and 
+	initializes the game loop where all game logic is processed, also contains
+	some global general all-purpose functions for making my life easier
+*/
+
+// prevents arrow key / space scrolling on the web page
 window.addEventListener("keydown", function(e) {
     // space and arrow keys
     if([32, 37, 38, 39, 40].indexOf(e.keyCode) > -1) {
@@ -16,33 +22,38 @@ window.addEventListener("keydown", function(e) {
 var canvas = document.getElementById("canvas");
 var context = canvas.getContext("2d");
 
-var timeElapsed = 0;
-var gameStart = 0;
-var dt = 0;
-var odt = 0;
+var timeElapsed = 0; //represents the total time elapsed since the page loaded
+var gameStart = 0; //represents the start of the current round in milliseconds elapsed since page load
+var dt = 0; //the amount of time between frames
+var odt = 0; //the overlap of dt, when too much accumulates, the game is updated multiple times per tick to match real world time
 
 var mode = 0;
 
-var saveKey = "technostalgic_LD38_highschore";
+var saveKey = "technostalgic_LD38_highschore"; //used to store highscore data in the browser's local data cache
 var score = 0;
 var hiscore = 0;
-var planets = [];
-var enemies = [];
-var projectiles = [];
-var items = [];
-var gibs = [];
-var effects = [];
-var tracers = [];
+var planets = []; //dynamic planet query
+var enemies = []; //dynamic enemy query
+var projectiles = []; //dynamic projectil query
+var items = []; //dynamic item query
+var gibs = []; //dynamic gib query
+var effects = []; //dynamic effect query
+var tracers = []; //dynamic tracer query
 var player1;
-var controls = [37, 39, 38, 40, 88, 67, 32];
+var controls = [37, 39, 38, 40, 88, 67, 32]; //the control scheme in keyCodes
 var controlState = {moveLeft:false, moveRight:false, increasePow:false, decreasePow:false, jump:false, fire:false, menu:false};
 
 var musicOn = true;
 var sfx = {};
 
 function clearScreen(ctx){
-	ctx.fillStyle = "#fff";
-	ctx.fillRect(0, 0, canvas.width, canvas.height);
+	/* function clearScreen(ctx)
+		clears the canvas to a plain white
+		params: 
+			ctx:canvasRenderingContext2D - the context to render with
+	*/
+	ctx.fillStyle = "#fff"; //opaque white
+	ctx.fillRect(0, 0, canvas.width, canvas.height); //a rectangle the size of the screen
 }
 
 function hook_controls(){
@@ -54,11 +65,14 @@ function hook_controls(){
 		player1.vel = new vec2();
 	});
 	*/
-	document.addEventListener('keydown', handleControlsDown);
-	document.addEventListener('keyup', handleControlsUp);
+	document.addEventListener('keydown', handleControlsDown); //handleControlsDown(e) is now called whenever a key press is detected
+	document.addEventListener('keyup', handleControlsUp); //handleControlsUp(e) is now called whenever a key release is detected
 }
 function handleControlsDown(event){
-	console.log(event.key + ":" + event.keyCode);
+	/* function handleControlsDown(event)
+		updates the game data to inform that a control is being triggered
+	*/
+	//console.log(event.key + ":" + event.keyCode); //used for debugging
 	//m key:
 	if(event.keyCode == 77)
 		toggleMusic();
@@ -87,6 +101,9 @@ function handleControlsDown(event){
 	}
 }
 function handleControlsUp(event){
+	/* function handleControlsDown(event)
+		updates the game data to inform that a control is done being triggered
+	*/
 	switch(event.keyCode){
 		case controls[0]:
 			controlState.moveLeft = false;
@@ -113,30 +130,46 @@ function handleControlsUp(event){
 }
 
 function elapsedGameTime(){
+	/* function elapsedGameTime()
+		returns the amount of time in milliseconds that the round has been going on for
+		value:Number
+	*/
 	return timeElapsed - gameStart;
 }
 
 function init(){
+	/* function init()
+		initializes all the game data when the page is loaded
+	*/
 	loadSound();
 	loadHighScore();
 	mode = 0;
 	hook_controls();
-	requestAnimationFrame(step);
+	requestAnimationFrame(step); //starts the game loop
 }
 function step(){
+	/* function step()
+		main logic loop entry point
+	*/
+	
+	//updates the game loop while trying to match real 
+	//world time as close as possibles
 	odt += dt;
 	while(odt >= 16.66667){
 		update();
 		odt -= 16.66667;
 	}
-	draw(context);
+	draw(context); //renders everything at the end of each tick
 	
-	requestAnimationFrame(step);
-	dt = Math.max(0, performance.now() - timeElapsed);
+	requestAnimationFrame(step); // sets the next step to be called recursively
+	dt = Math.max(0, performance.now() - timeElapsed); //measures the time between the last step and this step
 	timeElapsed = performance.now();
 }
 function update(){
-	if(mode != 1){
+	/* function update()
+		main logic entry point for the game loop
+	*/
+	if(mode != 1){ //if not in the middle of a round
 		menuUpdate();
 		return;
 	}
@@ -144,8 +177,11 @@ function update(){
 	handleSpawns();
 }
 function draw(ctx){
+	/* function draw(ctx)
+		renders everything on screen
+	*/
 	clearScreen(ctx);
-	if(mode != 1){
+	if(mode != 1){ //draw menus if need be
 		if(mode == 2) drawEndScreen(ctx);
 		else drawStartScreen(ctx);
 		return;
@@ -155,6 +191,9 @@ function draw(ctx){
 }
 
 function loadSound(){
+	/*function loadSound()
+		downloads all the sound to the client that the game needs
+	*/
 	sfx = {
 		music: new Audio("sfx/music.wav"),
 		startGame: new Audio("sfx/startGame.wav"),
@@ -174,6 +213,9 @@ function loadSound(){
 }
 
 function updateGame(){
+	/* function updateGame()
+		handles update logic for the game when a round is in session
+	*/
 	updateCharacters(enemies);
 	player1.update();
 	player1.control(controlState);
@@ -183,6 +225,11 @@ function updateGame(){
 	updateTracers();
 }
 function drawGame(ctx){
+	/* drawGame(ctx)
+		handles rendering when a round is in session
+		parameters:
+			ctx:canvasRenderingContext2D - context to render with
+	*/
 	drawTracers(ctx);
 	drawPlanets(planets, ctx);
 	drawCharacters(enemies, ctx);
@@ -194,28 +241,35 @@ function drawGame(ctx){
 }
 
 function drawHUD(ctx){
-	ctx.fillStyle = "rgba(100,100,0,0.1)";
+	/* function drawHUD(ctx)
+		renders text that represents useful data such as the current score,
+		high score, and how much ammo the player has left.
+		params:
+			ctx:canvasRenderingContext2D - context to render with
+	*/
+	ctx.fillStyle = "rgba(100,100,0,0.1)"; // translucent dull yellow
 	ctx.fillRect(0, 0, 600, 50);
 	
 	ctx.lineWidth = 3;
-	ctx.fillStyle = "#ded";
-	ctx.strokeStyle = "#070";
+	ctx.fillStyle = "#ded"; // very light and dull green
+	ctx.strokeStyle = "#070"; // dark green
 	ctx.textAlign = "left";
 	ctx.font = "bold 36px sans-serif";
 	ctx.strokeText(score.toString(), 2, 42);
 	ctx.fillText(score.toString(), 2, 42);
 	
 	ctx.font = "bold 12px sans-serif"
-	ctx.strokeText("SCORE  |  HIGH : " + hiscore.toString() + " ", 0, 10);
-	ctx.fillText("SCORE  |  HIGH : " + hiscore.toString() + " ", 0, 10);
+	var txx = "SCORE  |  HIGH : " + hiscore.toString() + " ";
+	ctx.strokeText(txx, 0, 10);
+	ctx.fillText(txx, 0, 10);
 	
-	ctx.fillStyle = "#ffa";
-	if(controlState.fire && player1.ammo <= 0)
+	ctx.fillStyle = "#ffa"; // light yellow
+	if(controlState.fire && player1.ammo <= 0) //flashes if out of ammo and player is trying to fire
 		ctx.fillStyle = timeElapsed % 200 > 100 ? "#f66" : "#ffa";
-	ctx.strokeStyle = "#a90";
+	ctx.strokeStyle = "#a90"; // dark yellow
 	ctx.textAlign = "center";
 	
-	ctx.font = "bold 12px sans-serif"
+	ctx.font = "bold 12px sans-serif";
 	ctx.strokeText("AMMO", 300, 10);
 	ctx.fillText("AMMO", 300, 10);
 	
