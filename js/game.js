@@ -279,14 +279,27 @@ function drawHUD(ctx){
 }
 
 function menuUpdate(){
+	/* function menuUpdate()
+		logic step for menu mode
+	*/
 	if(controlState.menu)
 		startGame();
 }
 function drawStartScreen(ctx){
+	/* drawStartScreen(ctx)
+		renders the start screen
+		parameters:
+			ctx:canvasRenderingContext2D - context to render with
+	*/
 	startscreen_drawTitle(ctx);
 	startscreen_drawStartPrompt(ctx);
 }
 function drawEndScreen(ctx){
+	/* function drawEndScreen(ctx)
+		renders the screen that appears when you die
+		params:
+			ctx:canvasRenderingContext2D - context to render with
+	*/
 	updateGame();
 	drawGame(ctx);
 	ctx.fillStyle = "rgba(0, 0, 0, 0.4)"
@@ -299,6 +312,7 @@ function drawEndScreen(ctx){
 }
 
 function startscreen_drawStartPrompt(ctx){
+	/*do i really need to explain*/
 	var col = "#ddd";
 	if(timeElapsed % 500 >= 250)
 		col = "#777";
