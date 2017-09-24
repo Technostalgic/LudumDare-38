@@ -312,7 +312,11 @@ function drawEndScreen(ctx){
 }
 
 function startscreen_drawStartPrompt(ctx){
-	/*do i really need to explain*/
+	/* function startscreen_drawStartPrompt(ctx)
+		draws the "press space to start" flashing text
+		parameters:
+			ctx:canvasRenderingContext2D - context to render with
+	*/
 	var col = "#ddd";
 	if(timeElapsed % 500 >= 250)
 		col = "#777";
@@ -322,6 +326,11 @@ function startscreen_drawStartPrompt(ctx){
 	ctx.fillText("PRESS SPACE TO START", 300, 500);
 }
 function startscreen_drawTitle(ctx){
+	/* startscreen_drawTitle(ctx)
+		draws the game's title
+		parameters:
+			ctx:canvasRenderingContext2D - context to render with
+	*/
 	ctx.fillStyle = "#bfb";
 	ctx.strokeStyle = "#5c5";
 	ctx.lineWidth = 1;
@@ -332,6 +341,11 @@ function startscreen_drawTitle(ctx){
 }
 
 function endscreen_drawGameover(ctx){
+	/* function endscreen_drawGameover(ctx)
+		draws the "game over" text
+		parameters:
+			ctx:canvasRenderingContext2D - context to render with
+	*/
 	ctx.fillStyle = "#faa";
 	ctx.strokeStyle = "#a11";
 	ctx.lineWidth = 1;
@@ -341,6 +355,11 @@ function endscreen_drawGameover(ctx){
 	ctx.strokeText("GAME OVER", 300, 100);
 }
 function endscreen_drawScore(ctx){
+	/* function endscreen_drawScore(ctx)
+		shows your score and compares it to the high score
+		parameters:
+			ctx:canvasRenderingContext2D - context to render with
+	*/
 	ctx.fillStyle = "#fff";
 	ctx.textAlign = "center";
 	ctx.font = "bold 24px sans-serif";
@@ -356,6 +375,11 @@ function endscreen_drawScore(ctx){
 	ctx.fillText(hiscore.toString(), 300, 340);
 }
 function endscreen_drawStartPrompt(ctx){
+	/* function endscreen_drawStartPrompt(ctx)
+		shows the "press space to start" flashing text
+		parameters:
+			ctx:canvasRenderingContext2D - context to render with
+	*/
 	var col = "#ddd";
 	if(timeElapsed % 500 >= 250)
 		col = "#777";
@@ -366,6 +390,10 @@ function endscreen_drawStartPrompt(ctx){
 }
 
 function startGame(){
+	/* function startGame()
+		begins a new round of the game and reinitializes all the game 
+		variables
+	*/
 	initSpawnVars();
 	mode = 1;
 	enemies = [];
@@ -388,10 +416,19 @@ function startGame(){
 	//DEBUGSTART();
 }
 function endGame(){
+	/* function endGame()
+		ends the current round
+	*/
 	mode = 2;
 	saveHighScore();
 }
 function addScore(pts, foc = null){
+	/* function addScore()
+		gives a specified amount of points to the player1
+		parameters: 
+			pts:Number - how many points to give the player1
+			foc:vec2 - the location that the points were obtained from
+	*/
 	if(player1.isDead) return;
 	if(foc){
 		var ft = new flashText(foc.clone(), pts.toString());
@@ -403,6 +440,11 @@ function addScore(pts, foc = null){
 }
 
 function loadHighScore(){
+	/* function loadHighScore()
+		loads the high score from the browser local storage if possible
+	*/
+	
+	// attempts to read the savekey from the browser's local storage
 	try{
 		var hi = localStorage.getItem(saveKey)
 		if(hi == null){
@@ -411,38 +453,63 @@ function loadHighScore(){
 		}
 		hiscore = Number.parseInt(hi);
 	}
-	catch(err){
+	catch(err){ // most likely reason for failure is because site storage is disabled in the browser's settings, so I just assume that's the exception that's thrown
 		alert("Warning: You have site storage disabled!\nYou can still play the game, but your high scores will not be saved.");
 		hiscore = 0;
 		return;
 	}
 }
 function saveHighScore(){
+	/* function saveHighScore()
+		saves the highscore to the browser's local storage if possible
+	*/
+	
+	// sets the session highscore to the last round's score if it beat the previous
+	// high score
 	hiscore = Math.max(score, hiscore);
+	
+	// attempts to save the high score to the browser's local storage
 	try{
 		localStorage.setItem(saveKey, hiscore);
 	}
-	catch(err){}
+	catch(err){} // if failure, don't worry about it.
 }
 
 function playSound(snd, startover = true){
+	/* function playSound(snd, startover)
+		called whenever a sound is played
+		parameters:
+			snd:Audio - the sound effect to play
+			startover:Boolean - if false AND this instance is already in the middle
+				of playing, the sound will continue to play as normal instead of 
+				restarting
+	*/
 	if(startover)
 		snd.currentTime = 0;
 	snd.play();
 }
 function loopMusic(){
+	/* function loopMusic()
+		sets the music to start looping
+	*/
 	if(!musicOn)
 		return;
 	sfx.music.addEventListener('ended', startMusicLoop);
 	sfx.music.play();
 }
 function startMusicLoop(){
+	/* function startMusicLoop()
+		restarts the music
+	*/
 	if(!musicOn)
 		return;
 	sfx.music.currentTime = 0;
 	sfx.music.play();
 }
 function toggleMusic(){
+	/* function toggleMusic()
+		toggles the music between playing and not playing
+	*/
 	musicOn = !musicOn;
 	if(!musicOn){
 		if(!sfx.music.paused)
@@ -453,28 +520,49 @@ function toggleMusic(){
 }
 
 function DEBUGSTART(){
-	//for(var i = 10; i > 0; i--){
-	//	var tm = new item();
-	//	tm.pos = new vec2(rand(0, 600), rand(0, 600));
-	//	tm.add()
-	//}
+	/* function DEBUGSTART()
+		starts the game with debug things (should only be called in debug build)
+	*/
+	/*
+	for(var i = 10; i > 0; i--){
+		var tm = new item();
+		tm.pos = new vec2(rand(0, 600), rand(0, 600));
+		tm.add()
+	}
+	*/
 	var en = new en_shooter();
 	en.add();
 }
 
 //life easier
 function rand(min = 0, max = 1){
+	/* function rand(min, max)
+		returns a random number between min and max
+	*/
 	return (Math.random() * (max - min) + min);
 }
 function mod(div, max){
+	/* function mod(div, max)
+		returns the unsigned modulus
+		parameters:
+			div:Number - the dividend
+			max:Number - the divisor
+	*/
 	if(div > 0)
 		return div % max;
 	return div % max + max;
 }
 function angDist(source, target){
+	/* function angDist(source, target)
+		returns the signed difference between two angles
+		parameters:
+			source:Number - the angle in radians
+			target:Number - the comparitive angle in radians
+	*/
 	var dif = target - source;
 	dif = mod(dif + Math.PI, Math.PI * 2) - Math.PI;
 	return dif;
 }
 
+// initializes the game
 init();
