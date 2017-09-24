@@ -5,7 +5,26 @@
 ///	twitter @technostalgicGM
 ///
 
+/* class player - character
+	data structure that contains methods and information a controllable character
+*/
 class player extends character{
+	/* constructor()
+		member variables:
+			private isAlias:Boolean - if this is being used as a tracer to show the
+				jump path
+			public rotation:Number - the rotation of the character	
+			public inAir:Boolean - represents whether the player was in the air 
+				during the last tick
+			public focusPlanet:planet - the planet that the player is onLine
+			public acc:Number - ??
+			public jumpPow:Number -
+			public firePow:Number -
+			public fireAdj:Boolean - ??
+			public currentTracer:tracer - the tracer that leaves the player trail
+			public ammo:Number - the ammount of times the player can fire before 
+				having to collect more ammo items
+	*/
 	constructor(){
 		super();
 		this.isAlias = false;
@@ -21,11 +40,20 @@ class player extends character{
 		this.ammo = 3;
 	}
 	
+	/* member function chooseRandPos()
+		chooses a random spawn position for the player on the surface of a planet
+	*/
 	chooseRandPos(){
 		this.pos = planets[Math.floor(rand(0, planets.length))].pos;
 		this.pos = this.pos.plus(vec2.fromAng(rand(0, Math.PI * 2)));
 	}
 	
+	/* member function control(controlstate)
+		handles the user input and makes the player react
+		parameters:
+			controlstate:{} - the state that each control is in, true if it was 
+			pressed, false otherwise
+	*/
 	control(controlstate){
 		if(this.isDead) return;
 		if(!this.inAir){
@@ -53,6 +81,9 @@ class player extends character{
 				this.control_decreasePow();
 		}
 	}
+	/* function control_moveLeft()
+		moves the player counter-clockwise around its focus planet
+	*/
 	control_moveLeft(){
 		var spd = 3;
 		this.acc += 0.1;
@@ -65,6 +96,9 @@ class player extends character{
 		if(this.vel.distance() < mov.distance())
 			this.vel = mov;
 	}
+	/* function control_moveRight()
+		moves the player clockwise around its focus planet
+	*/
 	control_moveRight(){
 		var spd = 3;
 		this.acc += 0.1; 
@@ -78,13 +112,20 @@ class player extends character{
 			this.vel = mov;
 	}
 	
+	/* function control_jump()
+		charges the player's jump power
+	*/
 	control_jump(){
-		var power = 15;
-		this.jumpPow = (this.jumpPow * 1.95 + power * 0.05) / 2;
+		var power = 15; // sets max power cap 
+		this.jumpPow = (this.jumpPow * 1.95 + power * 0.05) / 2; //caps out at `power`
 		if(this.jumpPow > power)
 			this.jumpPow = power;
 	}
+	/* function control_finishJump()
+		makes the player jump based on its jump power
+	*/
 	finishJump(){
+		// if the jump was only charged to 3 or less, don't worry about it
 		if(this.jumpPow < 3){
 			this.jumpPow = 0;
 			return;
@@ -96,6 +137,9 @@ class player extends character{
 		if(!this.isAlias)
 			playSound(sfx.jump);
 	}
+	/* function control_fire()
+		charges the player's firePow
+	*/
 	control_fire(){
 		if(this.ammo <= 0){
 			playSound(sfx.empty, false);
@@ -106,6 +150,9 @@ class player extends character{
 		var power = 18;
 		this.firePow = (this.firePow * 1.97 + power * 0.03) / 2;
 	}
+	/* function finishFire()
+		fires a projectile who's velocity is dependent on the player's `firePow`
+	*/
 	finishFire(){
 		if(this.firePow < 2){
 			this.firePow = 0;
@@ -119,11 +166,17 @@ class player extends character{
 		if(!this.isAlias)
 			playSound(sfx.shoot);
 	}
+	/* function control_inreasePow()
+		increases the player's firePow
+	*/
 	control_increasePow(){
 		this.fireAdj = true;
 		var power = 18;
 		this.firePow = (this.firePow * 1.97 + power * 0.03) / 2;
 	}
+	/* function control_decreasePow()
+		decreases the player's firePow
+	*/
 	control_decreasePow(){
 		this.fireAdj = true;
 		var power = 18;
@@ -133,11 +186,18 @@ class player extends character{
 			this.firePow = 0.00001;
 	}
 	
+	/* function checkCollisions()
+		checks collisions for the player
+	*/
 	checkCollisions(){
+		// calls the inherited checkCollisions() method
 		super.checkCollisions();
 		this.checkProjectileCollisions();
 		this.checkItemCollisions();
 	}
+	/* function checkProjectileCollisions()
+		checks collisions between the player and projectiles
+	*/
 	checkProjectileCollisions(){
 		for (var i = projectiles.length - 1; i >= 0; i--) {
 			if(projectiles[i].team == 0)
@@ -148,12 +208,18 @@ class player extends character{
 			}
 		}
 	}
+	/* function checkItemCollisions
+		checks collisions between the player and the items
+	*/
 	checkItemCollisions(){
 		for(var i = items.length - 1; i >= 0; i--){
 			if(items[i].pos.distance(this.pos) <= this.size + items[i].size)
 				items[i].pickUp();
 		}
 	}
+	/* function planetCollide(pl)
+		applies a collision between the planet and the player
+	*/
 	planetCollide(pl){
 		super.planetCollide(pl);
 		this.rotation = this.pos.minus(pl.pos).direction;
