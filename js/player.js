@@ -17,10 +17,14 @@ class player extends character{
 			public inAir:Boolean - represents whether the player was in the air 
 				during the last tick
 			public focusPlanet:planet - the planet that the player is onLine
-			public acc:Number - ??
-			public jumpPow:Number -
-			public firePow:Number -
-			public fireAdj:Boolean - ??
+			private acc:Number - acts as the acceleration variable for the player, 
+				makes the player move faster or slower based on how much "momentum" 
+				they have
+			public jumpPow:Number - charges when jump control is held
+			public firePow:Number - charges when fire control is held
+			private fireAdj:Boolean - flag variable used to determine if the fire 
+				power should automatically increase when increse or decrease power 
+				controls are aren't being held
 			public currentTracer:tracer - the tracer that leaves the player trail
 			public ammo:Number - the ammount of times the player can fire before 
 				having to collect more ammo items
@@ -81,7 +85,7 @@ class player extends character{
 				this.control_decreasePow();
 		}
 	}
-	/* function control_moveLeft()
+	/* member function control_moveLeft()
 		moves the player counter-clockwise around its focus planet
 	*/
 	control_moveLeft(){
@@ -96,7 +100,7 @@ class player extends character{
 		if(this.vel.distance() < mov.distance())
 			this.vel = mov;
 	}
-	/* function control_moveRight()
+	/* member function control_moveRight()
 		moves the player clockwise around its focus planet
 	*/
 	control_moveRight(){
@@ -112,7 +116,7 @@ class player extends character{
 			this.vel = mov;
 	}
 	
-	/* function control_jump()
+	/* member function control_jump()
 		charges the player's jump power
 	*/
 	control_jump(){
@@ -121,7 +125,7 @@ class player extends character{
 		if(this.jumpPow > power)
 			this.jumpPow = power;
 	}
-	/* function control_finishJump()
+	/* member function control_finishJump()
 		makes the player jump based on its jump power
 	*/
 	finishJump(){
@@ -137,7 +141,7 @@ class player extends character{
 		if(!this.isAlias)
 			playSound(sfx.jump);
 	}
-	/* function control_fire()
+	/* member function control_fire()
 		charges the player's firePow
 	*/
 	control_fire(){
@@ -150,7 +154,7 @@ class player extends character{
 		var power = 18;
 		this.firePow = (this.firePow * 1.97 + power * 0.03) / 2;
 	}
-	/* function finishFire()
+	/* member function finishFire()
 		fires a projectile who's velocity is dependent on the player's `firePow`
 	*/
 	finishFire(){
@@ -166,7 +170,7 @@ class player extends character{
 		if(!this.isAlias)
 			playSound(sfx.shoot);
 	}
-	/* function control_inreasePow()
+	/* member function control_inreasePow()
 		increases the player's firePow
 	*/
 	control_increasePow(){
@@ -174,7 +178,7 @@ class player extends character{
 		var power = 18;
 		this.firePow = (this.firePow * 1.97 + power * 0.03) / 2;
 	}
-	/* function control_decreasePow()
+	/* member function control_decreasePow()
 		decreases the player's firePow
 	*/
 	control_decreasePow(){
@@ -186,7 +190,7 @@ class player extends character{
 			this.firePow = 0.00001;
 	}
 	
-	/* function checkCollisions()
+	/* member function checkCollisions()
 		checks collisions for the player
 	*/
 	checkCollisions(){
@@ -195,7 +199,7 @@ class player extends character{
 		this.checkProjectileCollisions();
 		this.checkItemCollisions();
 	}
-	/* function checkProjectileCollisions()
+	/* member function checkProjectileCollisions()
 		checks collisions between the player and projectiles
 	*/
 	checkProjectileCollisions(){
@@ -208,7 +212,7 @@ class player extends character{
 			}
 		}
 	}
-	/* function checkItemCollisions
+	/* member function checkItemCollisions
 		checks collisions between the player and the items
 	*/
 	checkItemCollisions(){
@@ -217,7 +221,7 @@ class player extends character{
 				items[i].pickUp();
 		}
 	}
-	/* function planetCollide(pl)
+	/* member function planetCollide(pl)
 		applies a collision between the planet and the player
 	*/
 	planetCollide(pl){
@@ -228,6 +232,9 @@ class player extends character{
 		this.inAir = false;
 		this.closeTracer();
 	}
+	/* member function die()
+		kills the player
+	*/
 	die(){
 		if(!this.isDead){
 			playSound(sfx.death);
@@ -236,14 +243,23 @@ class player extends character{
 		}
 		this.health = 0;
 	}
+	/* member field get isDead()
+		returns a Boolean that represents whether or not this player is dead
+	*/
 	get isDead(){
 		return this.health <= 0;
 	}
 	
+	/* member function disableTracers()
+		disables the ability for the player to trace it's path
+	*/
 	disableTracers(){
 		this.tracePath = function(){};
 		this.openTracer = function(){};
 	}
+	/* member function tracePath()
+		see this.openTracer()
+	*/
 	tracePath(){
 		if(this.currentTracer == null){
 			this.currentTracer = new tracer();
@@ -251,6 +267,9 @@ class player extends character{
 		}
 		this.currentTracer.trace(this.pos.clone());
 	}
+	/* member function openTracer()
+		see this.tracePath()
+	*/
 	openTracer(){
 		if(this.currentTracer == null){
 			this.currentTracer = new tracer();
@@ -258,6 +277,9 @@ class player extends character{
 		}
 		this.currentTracer.trace(this.pos.clone());
 	}
+	/* member function closeTracer()
+		closes the player's tracer so a new one can be initialized and track its path
+	*/
 	closeTracer(){
 		if(this.currentTracer == null)
 			return;
@@ -266,6 +288,11 @@ class player extends character{
 		this.currentTracer = null;
 	}
 
+	/* member function drawJumpAim(ctx)
+		draws the path that the player will go in when they jump
+		parameters:
+			ctx:canvasRenderingContext2D - the context to render with
+	*/
 	drawJumpAim(ctx){
 		var trace = [];
 		var ja = this.jumpAlias;
@@ -286,6 +313,10 @@ class player extends character{
 			ctx.stroke();
 		}
 	}
+	/* member field get jumpAlias(){}
+		returns a new player that is identical to this one with with `isAlias` 
+		set to true and it's velocity derived from this player's jumpPow
+	*/
 	get jumpAlias(){
 		var r = new player();
 		r.isAlias = true;
@@ -299,7 +330,10 @@ class player extends character{
 		r.finishJump();
 		return r;
 	}
-
+	
+	/* member function drawFireAim(ctx)
+		draws the path that the projectile that is fired will travel
+	*/
 	drawFireAim(ctx){
 		var trace = [];
 		var fa = this.fireAlias;
@@ -323,6 +357,10 @@ class player extends character{
 			ctx.stroke();
 		}
 	}
+	
+	/* member field get fireAlias()
+		returns the projectile that will be fired as an alias
+	*/
 	get fireAlias(){
 		var p = new playerProjectile(this.pos);
 		p.vel = vec2.fromAng(this.rotation, this.firePow);
@@ -330,6 +368,9 @@ class player extends character{
 		return p;
 	}
 
+	/* member function update()
+		main logic step for player
+	*/
 	update(){
 		if(this.isDead) return;
 		this.lia = this.inAir;
@@ -341,15 +382,23 @@ class player extends character{
 		}
 		this.vel = this.vel.multiply(0.99);
 	}
+	/* member function draw(ctx)
+		renders the player on screen
+		parameters:
+			ctx:canvasRenderingContext2D - the context to render with
+	*/
 	draw(ctx){
+		// don't draw if dead
 		if(this.isDead) return;
-		ctx.fillStyle = "#ded";
-		ctx.strokeStyle = "#070";
+		
+		ctx.fillStyle = "#ded"; // lightly saturated green
+		ctx.strokeStyle = "#070"; // dark green
 		ctx.lineWidth = 1;
 		
-		var vert1 = this.pos.plus(vec2.fromAng(this.rotation - Math.PI / 4, this.size * 1.4));
-		var vert2 = this.pos.plus(vec2.fromAng(this.rotation + Math.PI / 4, this.size * 1.4));
+		var vert1 = this.pos.plus(vec2.fromAng(this.rotation - Math.PI / 4, this.size * 1.4)); // top left corner
+		var vert2 = this.pos.plus(vec2.fromAng(this.rotation + Math.PI / 4, this.size * 1.4)); // top right corner
 
+		// draw the player
 		ctx.beginPath();
 		ctx.closePath();
 		ctx.arc(this.pos.x, this.pos.y, this.size, this.rotation + Math.PI / 2, this.rotation - Math.PI / 2);
@@ -359,8 +408,11 @@ class player extends character{
 		ctx.fill();
 		ctx.stroke();
 
+		// draw the jump aim path
 		if(this.jumpPow > 3 && !this.inAir)
 			this.drawJumpAim(ctx);
+		
+		// draw the projectile aim path
 		if(this.firePow > 2)
 			this.drawFireAim(ctx);
 	}
